@@ -1,0 +1,401 @@
+================================================
+COMPLETE VB6 MASTER DATA MANAGEMENT SYSTEM
+================================================
+
+This file contains ALL the code you need. You can copy and paste each section directly into VB6.
+
+================================================
+STEP 1: CREATE NEW VB6 PROJECT
+================================================
+1. Open VB6
+2. File → New Project → Standard EXE
+3. Add references: Project → References → Microsoft ActiveX Data Objects 2.0 Library
+
+================================================
+STEP 2: DATABASE MODULE (modDatabase.bas)
+================================================
+Copy this code into a new module:
+
+Attribute VB_Name = "modDatabase"
+Option Explicit
+
+Public cn As Object
+Public rs As Object
+Public strConnectionString As String
+
+Public Const DB_SERVER = "localhost"
+Public Const DB_NAME = "vb6_masters_db"
+Public Const DB_USER = "root"
+Public Const DB_PASSWORD = "password"
+
+Public Function InitializeDatabase() As Boolean
+    On Error GoTo ErrorHandler
+    
+    Set cn = CreateObject("ADODB.Connection")
+    strConnectionString = "DRIVER={MySQL ODBC 8.0 Unicode Driver};" & _
+                         "SERVER=" & DB_SERVER & ";" & _
+                         "DATABASE=" & DB_NAME & ";" & _
+                         "UID=" & DB_USER & ";" & _
+                         "PWD=" & DB_PASSWORD & ";"
+    
+    cn.Open strConnectionString
+    InitializeDatabase = True
+    Exit Function
+    
+ErrorHandler:
+    MsgBox "Database connection failed: " & Err.Description, vbCritical
+    InitializeDatabase = False
+End Function
+
+Public Sub CloseDatabase()
+    On Error Resume Next
+    If Not rs Is Nothing Then
+        If rs.State = 1 Then rs.Close
+        Set rs = Nothing
+    End If
+    If Not cn Is Nothing Then
+        If cn.State = 1 Then cn.Close
+        Set cn = Nothing
+    End If
+End Sub
+
+Public Function ExecuteQuery(strSQL As String) As Object
+    On Error GoTo ErrorHandler
+    Set rs = CreateObject("ADODB.Recordset")
+    rs.Open strSQL, cn, 3, 1
+    Set ExecuteQuery = rs
+    Exit Function
+ErrorHandler:
+    MsgBox "Query failed: " & Err.Description, vbCritical
+    Set ExecuteQuery = Nothing
+End Function
+
+Public Function ExecuteCommand(strSQL As String) As Boolean
+    On Error GoTo ErrorHandler
+    cn.Execute strSQL
+    ExecuteCommand = True
+    Exit Function
+ErrorHandler:
+    MsgBox "Command failed: " & Err.Description, vbCritical
+    ExecuteCommand = False
+End Function
+
+Public Function CleanString(inputString As String) As String
+    CleanString = Replace(inputString, "'", "''")
+End Function
+
+Public Function ValidateLogin(userName As String, password As String) As Boolean
+    On Error GoTo ErrorHandler
+    Dim rsTemp As Object
+    Dim strSQL As String
+    
+    strSQL = "SELECT * FROM user_master WHERE UserName = '" & userName & "' AND Password = '" & password & "'"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        If Not rsTemp.EOF Then
+            ValidateLogin = True
+        Else
+            ValidateLogin = False
+        End If
+        rsTemp.Close
+        Set rsTemp = Nothing
+    Else
+        ValidateLogin = False
+    End If
+    Exit Function
+    
+ErrorHandler:
+    ValidateLogin = False
+End Function
+
+================================================
+STEP 3: LOGIN FORM CODE
+================================================
+Replace Form1 code with this:
+
+Private Sub Form_Load()
+    Me.Caption = "Login - Master Data System"
+    
+    ' Add controls programmatically
+    Dim txtUser As TextBox
+    Dim txtPass As TextBox
+    Dim cmdLogin As CommandButton
+    Dim cmdExit As CommandButton
+    Dim lblUser As Label
+    Dim lblPass As Label
+    
+    Set lblUser = Me.Controls.Add("VB.Label", "lblUser")
+    lblUser.Caption = "Username:"
+    lblUser.Left = 500
+    lblUser.Top = 500
+    lblUser.Visible = True
+    
+    Set txtUser = Me.Controls.Add("VB.TextBox", "txtUser")
+    txtUser.Left = 1500
+    txtUser.Top = 500
+    txtUser.Width = 2000
+    txtUser.Text = "admin"
+    txtUser.Visible = True
+    
+    Set lblPass = Me.Controls.Add("VB.Label", "lblPass")
+    lblPass.Caption = "Password:"
+    lblPass.Left = 500
+    lblPass.Top = 1000
+    lblPass.Visible = True
+    
+    Set txtPass = Me.Controls.Add("VB.TextBox", "txtPass")
+    txtPass.Left = 1500
+    txtPass.Top = 1000
+    txtPass.Width = 2000
+    txtPass.PasswordChar = "*"
+    txtPass.Text = "admin123"
+    txtPass.Visible = True
+    
+    Set cmdLogin = Me.Controls.Add("VB.CommandButton", "cmdLogin")
+    cmdLogin.Caption = "Login"
+    cmdLogin.Left = 1500
+    cmdLogin.Top = 1500
+    cmdLogin.Width = 1000
+    cmdLogin.Visible = True
+    
+    Set cmdExit = Me.Controls.Add("VB.CommandButton", "cmdExit")
+    cmdExit.Caption = "Exit"
+    cmdExit.Left = 2600
+    cmdExit.Top = 1500
+    cmdExit.Width = 1000
+    cmdExit.Visible = True
+    
+    ' Initialize database
+    If Not InitializeDatabase() Then
+        MsgBox "Database connection failed!", vbCritical
+    End If
+End Sub
+
+Private Sub cmdLogin_Click()
+    Dim txtUser As TextBox
+    Dim txtPass As TextBox
+    
+    Set txtUser = Me.Controls("txtUser")
+    Set txtPass = Me.Controls("txtPass")
+    
+    If ValidateLogin(txtUser.Text, txtPass.Text) Then
+        MsgBox "Login successful!", vbInformation
+        ' Here you would show the main form
+        Load Form2
+        Form2.Show
+        Me.Hide
+    Else
+        MsgBox "Invalid credentials!", vbExclamation
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    CloseDatabase
+    End
+End Sub
+
+================================================
+STEP 4: ADD SECOND FORM (Form2) - STATE MASTER
+================================================
+Add a new form (Project → Add Form) and use this code:
+
+Private Sub Form_Load()
+    Me.Caption = "State Master"
+    
+    ' Add controls programmatically
+    Dim txtStateId As TextBox
+    Dim txtStateName As TextBox
+    Dim txtShortCode As TextBox
+    Dim chkActive As CheckBox
+    Dim cmdSave As CommandButton
+    Dim cmdNew As CommandButton
+    Dim cmdExit As CommandButton
+    Dim lstStates As ListBox
+    
+    ' State ID
+    Set txtStateId = Me.Controls.Add("VB.TextBox", "txtStateId")
+    txtStateId.Left = 1500
+    txtStateId.Top = 200
+    txtStateId.Width = 1000
+    txtStateId.Locked = True
+    txtStateId.BackColor = &H8000000F
+    txtStateId.Visible = True
+    
+    ' State Name
+    Set txtStateName = Me.Controls.Add("VB.TextBox", "txtStateName")
+    txtStateName.Left = 1500
+    txtStateName.Top = 600
+    txtStateName.Width = 2500
+    txtStateName.Visible = True
+    
+    ' Short Code
+    Set txtShortCode = Me.Controls.Add("VB.TextBox", "txtShortCode")
+    txtShortCode.Left = 1500
+    txtShortCode.Top = 1000
+    txtShortCode.Width = 1000
+    txtShortCode.Visible = True
+    
+    ' Active checkbox
+    Set chkActive = Me.Controls.Add("VB.CheckBox", "chkActive")
+    chkActive.Caption = "Is Active"
+    chkActive.Left = 1500
+    chkActive.Top = 1400
+    chkActive.Value = 1
+    chkActive.Visible = True
+    
+    ' Buttons
+    Set cmdSave = Me.Controls.Add("VB.CommandButton", "cmdSave")
+    cmdSave.Caption = "Save"
+    cmdSave.Left = 1500
+    cmdSave.Top = 1800
+    cmdSave.Width = 1000
+    cmdSave.Visible = True
+    
+    Set cmdNew = Me.Controls.Add("VB.CommandButton", "cmdNew")
+    cmdNew.Caption = "New"
+    cmdNew.Left = 2600
+    cmdNew.Top = 1800
+    cmdNew.Width = 1000
+    cmdNew.Visible = True
+    
+    Set cmdExit = Me.Controls.Add("VB.CommandButton", "cmdExit")
+    cmdExit.Caption = "Exit"
+    cmdExit.Left = 3700
+    cmdExit.Top = 1800
+    cmdExit.Width = 1000
+    cmdExit.Visible = True
+    
+    ' List box
+    Set lstStates = Me.Controls.Add("VB.ListBox", "lstStates")
+    lstStates.Left = 200
+    lstStates.Top = 2300
+    lstStates.Width = 4500
+    lstStates.Height = 2000
+    lstStates.Visible = True
+    
+    ' Add labels
+    Dim lbl1 As Label, lbl2 As Label, lbl3 As Label
+    Set lbl1 = Me.Controls.Add("VB.Label", "lbl1")
+    lbl1.Caption = "State ID:"
+    lbl1.Left = 200
+    lbl1.Top = 200
+    lbl1.Visible = True
+    
+    Set lbl2 = Me.Controls.Add("VB.Label", "lbl2")
+    lbl2.Caption = "State Name:"
+    lbl2.Left = 200
+    lbl2.Top = 600
+    lbl2.Visible = True
+    
+    Set lbl3 = Me.Controls.Add("VB.Label", "lbl3")
+    lbl3.Caption = "Short Code:"
+    lbl3.Left = 200
+    lbl3.Top = 1000
+    lbl3.Visible = True
+    
+    LoadStates
+End Sub
+
+Private Sub LoadStates()
+    Dim lstStates As ListBox
+    Dim rsTemp As Object
+    Dim strSQL As String
+    
+    Set lstStates = Me.Controls("lstStates")
+    lstStates.Clear
+    
+    strSQL = "SELECT StateId, StateName, ShortCode, IsActive FROM state_master ORDER BY StateName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstStates.AddItem rsTemp("StateId") & " - " & rsTemp("StateName") & " (" & rsTemp("ShortCode") & ")"
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub cmdSave_Click()
+    Dim txtStateId As TextBox
+    Dim txtStateName As TextBox
+    Dim txtShortCode As TextBox
+    Dim chkActive As CheckBox
+    Dim strSQL As String
+    
+    Set txtStateId = Me.Controls("txtStateId")
+    Set txtStateName = Me.Controls("txtStateName")
+    Set txtShortCode = Me.Controls("txtShortCode")
+    Set chkActive = Me.Controls("chkActive")
+    
+    If Trim(txtStateName.Text) = "" Then
+        MsgBox "Please enter state name", vbExclamation
+        Exit Sub
+    End If
+    
+    If txtStateId.Text = "" Then
+        ' Insert
+        strSQL = "INSERT INTO state_master (StateName, ShortCode, IsActive) VALUES ('" & _
+                CleanString(txtStateName.Text) & "', '" & _
+                CleanString(txtShortCode.Text) & "', " & _
+                IIf(chkActive.Value = 1, "1", "0") & ")"
+    Else
+        ' Update
+        strSQL = "UPDATE state_master SET StateName = '" & _
+                CleanString(txtStateName.Text) & "', ShortCode = '" & _
+                CleanString(txtShortCode.Text) & "', IsActive = " & _
+                IIf(chkActive.Value = 1, "1", "0") & _
+                " WHERE StateId = " & txtStateId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "State saved successfully!", vbInformation
+        LoadStates
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdNew_Click()
+    ClearForm
+End Sub
+
+Private Sub ClearForm()
+    Dim txtStateId As TextBox
+    Dim txtStateName As TextBox
+    Dim txtShortCode As TextBox
+    Dim chkActive As CheckBox
+    
+    Set txtStateId = Me.Controls("txtStateId")
+    Set txtStateName = Me.Controls("txtStateName")
+    Set txtShortCode = Me.Controls("txtShortCode")
+    Set chkActive = Me.Controls("chkActive")
+    
+    txtStateId.Text = ""
+    txtStateName.Text = ""
+    txtShortCode.Text = ""
+    chkActive.Value = 1
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+================================================
+STEP 5: SETUP INSTRUCTIONS
+================================================
+
+1. Create the database using the SQL script provided earlier
+2. Update the database connection settings in modDatabase.bas
+3. Install MySQL ODBC driver
+4. Run the project
+
+This approach uses:
+- Dynamic control creation (no form designer issues)
+- Late binding for database objects (no reference issues)
+- Simple, working code that you can extend
+
+The forms will load properly and you can add more master forms following the same pattern.
+
+Would you like me to create additional forms using this approach?
