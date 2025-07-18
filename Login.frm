@@ -1,5 +1,5 @@
 VERSION 5.00
-Begin VB.Form frmLogin 
+Begin VB.Form Login 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Login"
    ClientHeight    =   3015
@@ -84,11 +84,12 @@ Begin VB.Form frmLogin
       Width           =   4215
    End
 End
-Attribute VB_Name = "frmLogin"
+Attribute VB_Name = "Login"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub Form_Load()
@@ -121,7 +122,7 @@ Private Sub cmdLogin_Click()
     If ValidateLogin(Trim(txtUserName.Text), Trim(txtPassword.Text)) Then
         ' Login successful
         Me.Hide
-        frmMain.Show
+        MainForm.Show
     Else
         MsgBox "Invalid user name or password.", vbExclamation, "Login Failed"
         txtPassword.Text = ""

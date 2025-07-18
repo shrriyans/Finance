@@ -1,36 +1,21 @@
 VERSION 5.00
-Begin VB.Form frmBankMaster 
+Begin VB.Form BankMaster 
    Caption         =   "Bank Master"
-   ClientHeight    =   6435
+   ClientHeight    =   4800
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8535
+   ClientWidth     =   6000
    LinkTopic       =   "Form1"
    MDIChild        =   -1  'True
-   ScaleHeight     =   6435
-   ScaleWidth      =   8535
-   Begin VB.Frame Frame2 
-      Caption         =   "Bank List"
-      Height          =   3735
-      Left            =   120
-      TabIndex        =   9
-      Top             =   2520
-      Width           =   8295
-      Begin VB.ListBox lstBanks 
-         Height          =   3180
-         Left            =   120
-         TabIndex        =   10
-         Top             =   360
-         Width           =   8055
-      End
-   End
+   ScaleHeight     =   4800
+   ScaleWidth      =   6000
    Begin VB.Frame Frame1 
       Caption         =   "Bank Details"
-      Height          =   2295
+      Height          =   1695
       Left            =   120
-      TabIndex        =   3
+      TabIndex        =   2
       Top             =   120
-      Width           =   8295
+      Width           =   5775
       Begin VB.CheckBox chkIsActive 
          Caption         =   "Is Active"
          Height          =   255
@@ -53,7 +38,7 @@ Begin VB.Form frmBankMaster
          Height          =   315
          Left            =   1440
          Locked          =   -1  'True
-         TabIndex        =   4
+         TabIndex        =   3
          Top             =   240
          Width           =   1215
       End
@@ -61,7 +46,7 @@ Begin VB.Form frmBankMaster
          Caption         =   "Bank Name:"
          Height          =   255
          Left            =   240
-         TabIndex        =   7
+         TabIndex        =   6
          Top             =   720
          Width           =   1095
       End
@@ -69,7 +54,7 @@ Begin VB.Form frmBankMaster
          Caption         =   "Bank ID:"
          Height          =   255
          Left            =   240
-         TabIndex        =   6
+         TabIndex        =   5
          Top             =   240
          Width           =   1095
       End
@@ -77,33 +62,41 @@ Begin VB.Form frmBankMaster
    Begin VB.CommandButton cmdExit 
       Caption         =   "E&xit"
       Height          =   375
-      Left            =   7080
-      TabIndex        =   8
-      Top             =   6840
-      Width           =   1215
-   End
-   Begin VB.CommandButton cmdDelete 
-      Caption         =   "&Delete"
-      Height          =   375
-      Left            =   5760
-      TabIndex        =   5
-      Top             =   6840
+      Left            =   4560
+      TabIndex        =   7
+      Top             =   4200
       Width           =   1215
    End
    Begin VB.CommandButton cmdSave 
       Caption         =   "&Save"
       Height          =   375
-      Left            =   4440
+      Left            =   3240
       TabIndex        =   0
-      Top             =   6840
+      Top             =   4200
       Width           =   1215
    End
+   Begin VB.Frame Frame2 
+      Caption         =   "Bank List"
+      Height          =   2175
+      Left            =   120
+      TabIndex        =   8
+      Top             =   1920
+      Width           =   5775
+      Begin VB.ListBox lstBanks 
+         Height          =   1815
+         Left            =   120
+         TabIndex        =   9
+         Top             =   240
+         Width           =   5535
+      End
+   End
 End
-Attribute VB_Name = "frmBankMaster"
+Attribute VB_Name = "BankMaster"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub Form_Load()
@@ -119,13 +112,14 @@ Private Sub LoadBanks()
     strSQL = "SELECT BankId, BankName, IsActive FROM bank_master ORDER BY BankName"
     Set rsTemp = ExecuteQuery(strSQL)
     
-    Do While Not rsTemp.EOF
-        lstBanks.AddItem rsTemp("BankId") & " - " & rsTemp("BankName") & " - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
-        rsTemp.MoveNext
-    Loop
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstBanks.AddItem rsTemp("BankId") & " - " & rsTemp("BankName") & " - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
 End Sub
 
 Private Sub ClearForm()
@@ -165,60 +159,6 @@ Private Sub cmdSave_Click()
     End If
 End Sub
 
-Private Sub cmdDelete_Click()
-    If txtBankId.Text = "" Then
-        MsgBox "Please select a bank to delete.", vbExclamation, "Validation Error"
-        Exit Sub
-    End If
-    
-    Dim response As Integer
-    response = MsgBox("Are you sure you want to delete this bank?", vbYesNo + vbQuestion, "Confirm Delete")
-    
-    If response = vbYes Then
-        Dim strSQL As String
-        strSQL = "DELETE FROM bank_master WHERE BankId = " & txtBankId.Text
-        
-        If ExecuteCommand(strSQL) Then
-            MsgBox "Bank deleted successfully.", vbInformation, "Success"
-            LoadBanks
-            ClearForm
-        End If
-    End If
-End Sub
-
 Private Sub cmdExit_Click()
     Unload Me
-End Sub
-
-Private Sub lstBanks_Click()
-    If lstBanks.ListIndex >= 0 Then
-        Dim bankId As String
-        Dim parts() As String
-        
-        parts = Split(lstBanks.Text, " - ")
-        bankId = parts(0)
-        
-        LoadBankDetails bankId
-    End If
-End Sub
-
-Private Sub LoadBankDetails(bankId As String)
-    Dim strSQL As String
-    Dim rsTemp As ADODB.Recordset
-    
-    strSQL = "SELECT * FROM bank_master WHERE BankId = " & bankId
-    Set rsTemp = ExecuteQuery(strSQL)
-    
-    If Not rsTemp.EOF Then
-        txtBankId.Text = rsTemp("BankId")
-        txtBankName.Text = rsTemp("BankName")
-        chkIsActive.Value = IIf(rsTemp("IsActive"), 1, 0)
-    End If
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
-End Sub
-
-Private Sub txtBankName_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then cmdSave.SetFocus
 End Sub

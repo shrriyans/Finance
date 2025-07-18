@@ -1,5 +1,5 @@
 VERSION 5.00
-Begin VB.MDIForm frmMain 
+Begin VB.MDIForm MainForm 
    BackColor       =   &H8000000C&
    Caption         =   "Master Data Management System"
    ClientHeight    =   7695
@@ -65,11 +65,12 @@ Begin VB.MDIForm frmMain
       End
    End
 End
-Attribute VB_Name = "frmMain"
+Attribute VB_Name = "MainForm"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub MDIForm_Load()
@@ -77,38 +78,38 @@ Private Sub MDIForm_Load()
 End Sub
 
 Private Sub mnuStateMaster_Click()
-    Dim frm As frmStateMaster
-    Set frm = New frmStateMaster
+    Dim frm As StateMaster
+    Set frm = New StateMaster
     frm.Show
 End Sub
 
 Private Sub mnuCityMaster_Click()
-    Dim frm As frmCityMaster
-    Set frm = New frmCityMaster
+    Dim frm As CityMaster
+    Set frm = New CityMaster
     frm.Show
 End Sub
 
 Private Sub mnuUserMaster_Click()
-    Dim frm As frmUserMaster
-    Set frm = New frmUserMaster
+    Dim frm As UserMaster
+    Set frm = New UserMaster
     frm.Show
 End Sub
 
 Private Sub mnuBankMaster_Click()
-    Dim frm As frmBankMaster
-    Set frm = New frmBankMaster
+    Dim frm As BankMaster
+    Set frm = New BankMaster
     frm.Show
 End Sub
 
 Private Sub mnuReferenceMaster_Click()
-    Dim frm As frmReferenceMaster
-    Set frm = New frmReferenceMaster
+    Dim frm As ReferenceMaster
+    Set frm = New ReferenceMaster
     frm.Show
 End Sub
 
 Private Sub mnuCustomerMaster_Click()
-    Dim frm As frmCustomerMaster
-    Set frm = New frmCustomerMaster
+    Dim frm As CustomerMaster
+    Set frm = New CustomerMaster
     frm.Show
 End Sub
 
@@ -133,10 +134,10 @@ Private Sub mnuLogout_Click()
     response = MsgBox("Are you sure you want to logout?", vbYesNo + vbQuestion, "Logout")
     If response = vbYes Then
         Me.Hide
-        frmLogin.Show
-        frmLogin.txtUserName.Text = ""
-        frmLogin.txtPassword.Text = ""
-        frmLogin.txtUserName.SetFocus
+        Login.Show
+        Login.txtUserName.Text = ""
+        Login.txtPassword.Text = ""
+        Login.txtUserName.SetFocus
     End If
 End Sub
 

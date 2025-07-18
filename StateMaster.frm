@@ -1,5 +1,5 @@
 VERSION 5.00
-Begin VB.Form frmStateMaster 
+Begin VB.Form StateMaster 
    Caption         =   "State Master"
    ClientHeight    =   6435
    ClientLeft      =   60
@@ -115,11 +115,12 @@ Begin VB.Form frmStateMaster
       Width           =   1215
    End
 End
-Attribute VB_Name = "frmStateMaster"
+Attribute VB_Name = "StateMaster"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub Form_Load()
@@ -135,13 +136,14 @@ Private Sub LoadStates()
     strSQL = "SELECT StateId, StateName, ShortCode, IsActive FROM state_master ORDER BY StateName"
     Set rsTemp = ExecuteQuery(strSQL)
     
-    Do While Not rsTemp.EOF
-        lstStates.AddItem rsTemp("StateId") & " - " & rsTemp("StateName") & " (" & rsTemp("ShortCode") & ") - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
-        rsTemp.MoveNext
-    Loop
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstStates.AddItem rsTemp("StateId") & " - " & rsTemp("StateName") & " (" & rsTemp("ShortCode") & ") - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
 End Sub
 
 Private Sub ClearForm()
@@ -234,15 +236,16 @@ Private Sub LoadStateDetails(stateId As String)
     strSQL = "SELECT * FROM state_master WHERE StateId = " & stateId
     Set rsTemp = ExecuteQuery(strSQL)
     
-    If Not rsTemp.EOF Then
-        txtStateId.Text = rsTemp("StateId")
-        txtStateName.Text = rsTemp("StateName")
-        txtShortCode.Text = rsTemp("ShortCode")
-        chkIsActive.Value = IIf(rsTemp("IsActive"), 1, 0)
+    If Not rsTemp Is Nothing Then
+        If Not rsTemp.EOF Then
+            txtStateId.Text = rsTemp("StateId")
+            txtStateName.Text = rsTemp("StateName")
+            txtShortCode.Text = rsTemp("ShortCode")
+            chkIsActive.Value = IIf(rsTemp("IsActive"), 1, 0)
+        End If
+        rsTemp.Close
+        Set rsTemp = Nothing
     End If
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
 End Sub
 
 Private Sub txtStateName_KeyPress(KeyAscii As Integer)

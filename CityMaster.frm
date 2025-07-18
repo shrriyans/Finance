@@ -1,36 +1,21 @@
 VERSION 5.00
-Begin VB.Form frmCityMaster 
+Begin VB.Form CityMaster 
    Caption         =   "City Master"
-   ClientHeight    =   6975
+   ClientHeight    =   5400
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8535
+   ClientWidth     =   7000
    LinkTopic       =   "Form1"
    MDIChild        =   -1  'True
-   ScaleHeight     =   6975
-   ScaleWidth      =   8535
-   Begin VB.Frame Frame2 
-      Caption         =   "City List"
-      Height          =   3735
-      Left            =   120
-      TabIndex        =   14
-      Top             =   3000
-      Width           =   8295
-      Begin VB.ListBox lstCities 
-         Height          =   3180
-         Left            =   120
-         TabIndex        =   15
-         Top             =   360
-         Width           =   8055
-      End
-   End
+   ScaleHeight     =   5400
+   ScaleWidth      =   7000
    Begin VB.Frame Frame1 
       Caption         =   "City Details"
       Height          =   2775
       Left            =   120
       TabIndex        =   4
       Top             =   120
-      Width           =   8295
+      Width           =   6735
       Begin VB.ComboBox cboState 
          Height          =   315
          Left            =   1440
@@ -109,41 +94,41 @@ Begin VB.Form frmCityMaster
    Begin VB.CommandButton cmdExit 
       Caption         =   "E&xit"
       Height          =   375
-      Left            =   7080
+      Left            =   5640
       TabIndex        =   9
-      Top             =   6840
-      Width           =   1215
-   End
-   Begin VB.CommandButton cmdDelete 
-      Caption         =   "&Delete"
-      Height          =   375
-      Left            =   5760
-      TabIndex        =   8
-      Top             =   6840
+      Top             =   4800
       Width           =   1215
    End
    Begin VB.CommandButton cmdSave 
       Caption         =   "&Save"
       Height          =   375
-      Left            =   4440
+      Left            =   4320
       TabIndex        =   7
-      Top             =   6840
+      Top             =   4800
       Width           =   1215
    End
-   Begin VB.CommandButton cmdNew 
-      Caption         =   "&New"
-      Height          =   375
-      Left            =   3120
-      TabIndex        =   6
-      Top             =   6840
-      Width           =   1215
+   Begin VB.Frame Frame2 
+      Caption         =   "City List"
+      Height          =   1695
+      Left            =   120
+      TabIndex        =   14
+      Top             =   2970
+      Width           =   6735
+      Begin VB.ListBox lstCities 
+         Height          =   1230
+         Left            =   120
+         TabIndex        =   15
+         Top             =   360
+         Width           =   6495
+      End
    End
 End
-Attribute VB_Name = "frmCityMaster"
+Attribute VB_Name = "CityMaster"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub Form_Load()
@@ -169,13 +154,14 @@ Private Sub LoadCities()
              "ORDER BY c.CityName"
     Set rsTemp = ExecuteQuery(strSQL)
     
-    Do While Not rsTemp.EOF
-        lstCities.AddItem rsTemp("CityId") & " - " & rsTemp("CityName") & " (" & rsTemp("ShortCode") & ") - " & rsTemp("StateName") & " - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
-        rsTemp.MoveNext
-    Loop
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstCities.AddItem rsTemp("CityId") & " - " & rsTemp("CityName") & " (" & rsTemp("ShortCode") & ") - " & rsTemp("StateName")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
 End Sub
 
 Private Sub ClearForm()
@@ -187,21 +173,11 @@ Private Sub ClearForm()
     txtCityName.SetFocus
 End Sub
 
-Private Sub cmdNew_Click()
-    ClearForm
-End Sub
-
 Private Sub cmdSave_Click()
     ' Validate input
     If Trim(txtCityName.Text) = "" Then
         MsgBox "Please enter city name.", vbExclamation, "Validation Error"
         txtCityName.SetFocus
-        Exit Sub
-    End If
-    
-    If Trim(txtShortCode.Text) = "" Then
-        MsgBox "Please enter short code.", vbExclamation, "Validation Error"
-        txtShortCode.SetFocus
         Exit Sub
     End If
     
@@ -237,82 +213,6 @@ Private Sub cmdSave_Click()
     End If
 End Sub
 
-Private Sub cmdDelete_Click()
-    If txtCityId.Text = "" Then
-        MsgBox "Please select a city to delete.", vbExclamation, "Validation Error"
-        Exit Sub
-    End If
-    
-    Dim response As Integer
-    response = MsgBox("Are you sure you want to delete this city?", vbYesNo + vbQuestion, "Confirm Delete")
-    
-    If response = vbYes Then
-        Dim strSQL As String
-        strSQL = "DELETE FROM city_master WHERE CityId = " & txtCityId.Text
-        
-        If ExecuteCommand(strSQL) Then
-            MsgBox "City deleted successfully.", vbInformation, "Success"
-            LoadCities
-            ClearForm
-        End If
-    End If
-End Sub
-
 Private Sub cmdExit_Click()
     Unload Me
-End Sub
-
-Private Sub lstCities_Click()
-    If lstCities.ListIndex >= 0 Then
-        Dim cityId As String
-        Dim parts() As String
-        
-        parts = Split(lstCities.Text, " - ")
-        cityId = parts(0)
-        
-        LoadCityDetails cityId
-    End If
-End Sub
-
-Private Sub LoadCityDetails(cityId As String)
-    Dim strSQL As String
-    Dim rsTemp As ADODB.Recordset
-    Dim i As Integer
-    
-    strSQL = "SELECT * FROM city_master WHERE CityId = " & cityId
-    Set rsTemp = ExecuteQuery(strSQL)
-    
-    If Not rsTemp.EOF Then
-        txtCityId.Text = rsTemp("CityId")
-        txtCityName.Text = rsTemp("CityName")
-        txtShortCode.Text = rsTemp("ShortCode")
-        chkIsActive.Value = IIf(rsTemp("IsActive"), 1, 0)
-        
-        ' Set state combo
-        For i = 0 To cboState.ListCount - 1
-            If cboState.ItemData(i) = rsTemp("StateId") Then
-                cboState.ListIndex = i
-                Exit For
-            End If
-        Next i
-    End If
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
-End Sub
-
-Private Sub txtCityName_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then txtShortCode.SetFocus
-End Sub
-
-Private Sub txtShortCode_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then cboState.SetFocus
-    ' Convert to uppercase
-    If KeyAscii >= 97 And KeyAscii <= 122 Then
-        KeyAscii = KeyAscii - 32
-    End If
-End Sub
-
-Private Sub cboState_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then cmdSave.SetFocus
 End Sub

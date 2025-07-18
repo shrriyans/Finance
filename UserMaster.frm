@@ -1,36 +1,21 @@
 VERSION 5.00
-Begin VB.Form frmUserMaster 
+Begin VB.Form UserMaster 
    Caption         =   "User Master"
-   ClientHeight    =   6435
+   ClientHeight    =   4800
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   8535
+   ClientWidth     =   6000
    LinkTopic       =   "Form1"
    MDIChild        =   -1  'True
-   ScaleHeight     =   6435
-   ScaleWidth      =   8535
-   Begin VB.Frame Frame2 
-      Caption         =   "User List"
-      Height          =   3735
-      Left            =   120
-      TabIndex        =   10
-      Top             =   2520
-      Width           =   8295
-      Begin VB.ListBox lstUsers 
-         Height          =   3180
-         Left            =   120
-         TabIndex        =   11
-         Top             =   360
-         Width           =   8055
-      End
-   End
+   ScaleHeight     =   4800
+   ScaleWidth      =   6000
    Begin VB.Frame Frame1 
       Caption         =   "User Details"
       Height          =   2295
       Left            =   120
       TabIndex        =   3
       Top             =   120
-      Width           =   8295
+      Width           =   5775
       Begin VB.TextBox txtPassword 
          Height          =   315
          IMEMode         =   3  'DISABLE
@@ -86,33 +71,41 @@ Begin VB.Form frmUserMaster
    Begin VB.CommandButton cmdExit 
       Caption         =   "E&xit"
       Height          =   375
-      Left            =   7080
+      Left            =   4560
       TabIndex        =   9
-      Top             =   6840
-      Width           =   1215
-   End
-   Begin VB.CommandButton cmdDelete 
-      Caption         =   "&Delete"
-      Height          =   375
-      Left            =   5760
-      TabIndex        =   5
-      Top             =   6840
+      Top             =   4200
       Width           =   1215
    End
    Begin VB.CommandButton cmdSave 
       Caption         =   "&Save"
       Height          =   375
-      Left            =   4440
+      Left            =   3240
       TabIndex        =   0
-      Top             =   6840
+      Top             =   4200
       Width           =   1215
    End
+   Begin VB.Frame Frame2 
+      Caption         =   "User List"
+      Height          =   1575
+      Left            =   120
+      TabIndex        =   10
+      Top             =   2520
+      Width           =   5775
+      Begin VB.ListBox lstUsers 
+         Height          =   1035
+         Left            =   120
+         TabIndex        =   11
+         Top             =   360
+         Width           =   5535
+      End
+   End
 End
-Attribute VB_Name = "frmUserMaster"
+Attribute VB_Name = "UserMaster"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 Private Sub Form_Load()
@@ -128,13 +121,14 @@ Private Sub LoadUsers()
     strSQL = "SELECT Id, UserName FROM user_master ORDER BY UserName"
     Set rsTemp = ExecuteQuery(strSQL)
     
-    Do While Not rsTemp.EOF
-        lstUsers.AddItem rsTemp("Id") & " - " & rsTemp("UserName")
-        rsTemp.MoveNext
-    Loop
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstUsers.AddItem rsTemp("Id") & " - " & rsTemp("UserName")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
 End Sub
 
 Private Sub ClearForm()
@@ -158,13 +152,6 @@ Private Sub cmdSave_Click()
         Exit Sub
     End If
     
-    ' Check for duplicate username
-    If CheckDuplicateUser(txtUserName.Text, txtUserId.Text) Then
-        MsgBox "User name already exists. Please choose a different user name.", vbExclamation, "Validation Error"
-        txtUserName.SetFocus
-        Exit Sub
-    End If
-    
     Dim strSQL As String
     
     If txtUserId.Text = "" Then
@@ -183,33 +170,6 @@ Private Sub cmdSave_Click()
         MsgBox "User saved successfully.", vbInformation, "Success"
         LoadUsers
         ClearForm
-    End If
-End Sub
-
-Private Sub cmdDelete_Click()
-    If txtUserId.Text = "" Then
-        MsgBox "Please select a user to delete.", vbExclamation, "Validation Error"
-        Exit Sub
-    End If
-    
-    ' Prevent deletion of current user (admin)
-    If txtUserName.Text = "admin" Then
-        MsgBox "Cannot delete admin user.", vbExclamation, "Validation Error"
-        Exit Sub
-    End If
-    
-    Dim response As Integer
-    response = MsgBox("Are you sure you want to delete this user?", vbYesNo + vbQuestion, "Confirm Delete")
-    
-    If response = vbYes Then
-        Dim strSQL As String
-        strSQL = "DELETE FROM user_master WHERE Id = " & txtUserId.Text
-        
-        If ExecuteCommand(strSQL) Then
-            MsgBox "User deleted successfully.", vbInformation, "Success"
-            LoadUsers
-            ClearForm
-        End If
     End If
 End Sub
 
@@ -236,42 +196,13 @@ Private Sub LoadUserDetails(userId As String)
     strSQL = "SELECT * FROM user_master WHERE Id = " & userId
     Set rsTemp = ExecuteQuery(strSQL)
     
-    If Not rsTemp.EOF Then
-        txtUserId.Text = rsTemp("Id")
-        txtUserName.Text = rsTemp("UserName")
-        txtPassword.Text = rsTemp("Password")
+    If Not rsTemp Is Nothing Then
+        If Not rsTemp.EOF Then
+            txtUserId.Text = rsTemp("Id")
+            txtUserName.Text = rsTemp("UserName")
+            txtPassword.Text = rsTemp("Password")
+        End If
+        rsTemp.Close
+        Set rsTemp = Nothing
     End If
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
-End Sub
-
-Private Function CheckDuplicateUser(userName As String, userId As String) As Boolean
-    Dim strSQL As String
-    Dim rsTemp As ADODB.Recordset
-    
-    If userId = "" Then
-        strSQL = "SELECT COUNT(*) as UserCount FROM user_master WHERE UserName = '" & CleanString(userName) & "'"
-    Else
-        strSQL = "SELECT COUNT(*) as UserCount FROM user_master WHERE UserName = '" & CleanString(userName) & "' AND Id <> " & userId
-    End If
-    
-    Set rsTemp = ExecuteQuery(strSQL)
-    
-    If Not rsTemp.EOF Then
-        CheckDuplicateUser = (rsTemp("UserCount") > 0)
-    Else
-        CheckDuplicateUser = False
-    End If
-    
-    rsTemp.Close
-    Set rsTemp = Nothing
-End Function
-
-Private Sub txtUserName_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then txtPassword.SetFocus
-End Sub
-
-Private Sub txtPassword_KeyPress(KeyAscii As Integer)
-    If KeyAscii = 13 Then cmdSave.SetFocus
 End Sub
