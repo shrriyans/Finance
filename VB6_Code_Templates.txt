@@ -1,0 +1,490 @@
+' ========================================
+' VB6 CODE TEMPLATES FOR MASTER FORMS
+' ========================================
+
+' ========================================
+' TEMPLATE 1: CITY MASTER FORM CODE
+' ========================================
+Option Explicit
+
+Private Sub Form_Load()
+    LoadStates
+    LoadCities
+    ClearForm
+End Sub
+
+Private Sub LoadStates()
+    Dim strSQL As String
+    strSQL = "SELECT StateId, StateName FROM state_master WHERE IsActive = 1 ORDER BY StateName"
+    FillCombo cboState, strSQL, "StateId", "StateName"
+End Sub
+
+Private Sub LoadCities()
+    Dim strSQL As String
+    Dim rsTemp As ADODB.Recordset
+    
+    lstCities.Clear
+    strSQL = "SELECT c.CityId, c.CityName, c.ShortCode, c.IsActive, s.StateName " & _
+             "FROM city_master c " & _
+             "INNER JOIN state_master s ON c.StateId = s.StateId " & _
+             "ORDER BY c.CityName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstCities.AddItem rsTemp("CityId") & " - " & rsTemp("CityName") & " (" & rsTemp("ShortCode") & ") - " & rsTemp("StateName")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub ClearForm()
+    txtCityId.Text = ""
+    txtCityName.Text = ""
+    txtShortCode.Text = ""
+    cboState.ListIndex = -1
+    chkIsActive.Value = 1
+    txtCityName.SetFocus
+End Sub
+
+Private Sub cmdSave_Click()
+    If Trim(txtCityName.Text) = "" Then
+        MsgBox "Please enter city name.", vbExclamation, "Validation Error"
+        txtCityName.SetFocus
+        Exit Sub
+    End If
+    
+    If cboState.ListIndex = -1 Then
+        MsgBox "Please select a state.", vbExclamation, "Validation Error"
+        cboState.SetFocus
+        Exit Sub
+    End If
+    
+    Dim strSQL As String
+    
+    If txtCityId.Text = "" Then
+        strSQL = "INSERT INTO city_master (CityName, ShortCode, StateId, IsActive) VALUES ('" & _
+                CleanString(txtCityName.Text) & "', '" & _
+                CleanString(txtShortCode.Text) & "', " & _
+                cboState.ItemData(cboState.ListIndex) & ", " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & ")"
+    Else
+        strSQL = "UPDATE city_master SET CityName = '" & _
+                CleanString(txtCityName.Text) & "', ShortCode = '" & _
+                CleanString(txtShortCode.Text) & "', StateId = " & _
+                cboState.ItemData(cboState.ListIndex) & ", IsActive = " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & _
+                " WHERE CityId = " & txtCityId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "City saved successfully.", vbInformation, "Success"
+        LoadCities
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+' ========================================
+' TEMPLATE 2: USER MASTER FORM CODE
+' ========================================
+Option Explicit
+
+Private Sub Form_Load()
+    LoadUsers
+    ClearForm
+End Sub
+
+Private Sub LoadUsers()
+    Dim strSQL As String
+    Dim rsTemp As ADODB.Recordset
+    
+    lstUsers.Clear
+    strSQL = "SELECT Id, UserName FROM user_master ORDER BY UserName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstUsers.AddItem rsTemp("Id") & " - " & rsTemp("UserName")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub ClearForm()
+    txtUserId.Text = ""
+    txtUserName.Text = ""
+    txtPassword.Text = ""
+    txtUserName.SetFocus
+End Sub
+
+Private Sub cmdSave_Click()
+    If Trim(txtUserName.Text) = "" Then
+        MsgBox "Please enter user name.", vbExclamation, "Validation Error"
+        txtUserName.SetFocus
+        Exit Sub
+    End If
+    
+    If Trim(txtPassword.Text) = "" Then
+        MsgBox "Please enter password.", vbExclamation, "Validation Error"
+        txtPassword.SetFocus
+        Exit Sub
+    End If
+    
+    Dim strSQL As String
+    
+    If txtUserId.Text = "" Then
+        strSQL = "INSERT INTO user_master (UserName, Password) VALUES ('" & _
+                CleanString(txtUserName.Text) & "', '" & _
+                CleanString(txtPassword.Text) & "')"
+    Else
+        strSQL = "UPDATE user_master SET UserName = '" & _
+                CleanString(txtUserName.Text) & "', Password = '" & _
+                CleanString(txtPassword.Text) & "' WHERE Id = " & txtUserId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "User saved successfully.", vbInformation, "Success"
+        LoadUsers
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+' ========================================
+' TEMPLATE 3: BANK MASTER FORM CODE
+' ========================================
+Option Explicit
+
+Private Sub Form_Load()
+    LoadBanks
+    ClearForm
+End Sub
+
+Private Sub LoadBanks()
+    Dim strSQL As String
+    Dim rsTemp As ADODB.Recordset
+    
+    lstBanks.Clear
+    strSQL = "SELECT BankId, BankName, IsActive FROM bank_master ORDER BY BankName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstBanks.AddItem rsTemp("BankId") & " - " & rsTemp("BankName") & " - " & IIf(rsTemp("IsActive"), "Active", "Inactive")
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub ClearForm()
+    txtBankId.Text = ""
+    txtBankName.Text = ""
+    chkIsActive.Value = 1
+    txtBankName.SetFocus
+End Sub
+
+Private Sub cmdSave_Click()
+    If Trim(txtBankName.Text) = "" Then
+        MsgBox "Please enter bank name.", vbExclamation, "Validation Error"
+        txtBankName.SetFocus
+        Exit Sub
+    End If
+    
+    Dim strSQL As String
+    
+    If txtBankId.Text = "" Then
+        strSQL = "INSERT INTO bank_master (BankName, IsActive) VALUES ('" & _
+                CleanString(txtBankName.Text) & "', " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & ")"
+    Else
+        strSQL = "UPDATE bank_master SET BankName = '" & _
+                CleanString(txtBankName.Text) & "', IsActive = " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & _
+                " WHERE BankId = " & txtBankId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "Bank saved successfully.", vbInformation, "Success"
+        LoadBanks
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+' ========================================
+' TEMPLATE 4: REFERENCE MASTER FORM CODE
+' ========================================
+Option Explicit
+
+Private Sub Form_Load()
+    LoadStates
+    LoadReferences
+    ClearForm
+End Sub
+
+Private Sub LoadStates()
+    Dim strSQL As String
+    strSQL = "SELECT StateId, StateName FROM state_master WHERE IsActive = 1 ORDER BY StateName"
+    FillCombo cboState, strSQL, "StateId", "StateName"
+End Sub
+
+Private Sub LoadReferences()
+    Dim strSQL As String
+    Dim rsTemp As ADODB.Recordset
+    
+    lstReferences.Clear
+    strSQL = "SELECT r.ReferenceId, r.ReferenceName, r.MobileNo, r.EmailId, r.IsActive, " & _
+             "c.CityName, s.StateName " & _
+             "FROM reference_master r " & _
+             "LEFT JOIN city_master c ON r.CityId = c.CityId " & _
+             "LEFT JOIN state_master s ON r.StateId = s.StateId " & _
+             "ORDER BY r.ReferenceName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstReferences.AddItem rsTemp("ReferenceId") & " - " & rsTemp("ReferenceName") & " - " & _
+                                 IIf(IsNull(rsTemp("MobileNo")), "", rsTemp("MobileNo"))
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub ClearForm()
+    txtReferenceId.Text = ""
+    txtReferenceName.Text = ""
+    txtAddress.Text = ""
+    txtMobileNo.Text = ""
+    txtEmailId.Text = ""
+    cboState.ListIndex = -1
+    cboCity.Clear
+    chkIsActive.Value = 1
+    txtReferenceName.SetFocus
+End Sub
+
+Private Sub cmdSave_Click()
+    If Trim(txtReferenceName.Text) = "" Then
+        MsgBox "Please enter reference name.", vbExclamation, "Validation Error"
+        txtReferenceName.SetFocus
+        Exit Sub
+    End If
+    
+    Dim strSQL As String
+    Dim cityId As String
+    Dim stateId As String
+    
+    cityId = "NULL"
+    stateId = "NULL"
+    
+    If cboCity.ListIndex >= 0 Then
+        cityId = cboCity.ItemData(cboCity.ListIndex)
+    End If
+    
+    If cboState.ListIndex >= 0 Then
+        stateId = cboState.ItemData(cboState.ListIndex)
+    End If
+    
+    If txtReferenceId.Text = "" Then
+        strSQL = "INSERT INTO reference_master (ReferenceName, Address, MobileNo, EmailId, CityId, StateId, IsActive) VALUES ('" & _
+                CleanString(txtReferenceName.Text) & "', '" & _
+                CleanString(txtAddress.Text) & "', '" & _
+                CleanString(txtMobileNo.Text) & "', '" & _
+                CleanString(txtEmailId.Text) & "', " & _
+                cityId & ", " & stateId & ", " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & ")"
+    Else
+        strSQL = "UPDATE reference_master SET ReferenceName = '" & _
+                CleanString(txtReferenceName.Text) & "', Address = '" & _
+                CleanString(txtAddress.Text) & "', MobileNo = '" & _
+                CleanString(txtMobileNo.Text) & "', EmailId = '" & _
+                CleanString(txtEmailId.Text) & "', CityId = " & _
+                cityId & ", StateId = " & stateId & ", IsActive = " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & _
+                " WHERE ReferenceId = " & txtReferenceId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "Reference saved successfully.", vbInformation, "Success"
+        LoadReferences
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+Private Sub cboState_Click()
+    If cboState.ListIndex >= 0 Then
+        LoadCities cboState.ItemData(cboState.ListIndex)
+    Else
+        cboCity.Clear
+    End If
+End Sub
+
+Private Sub LoadCities(stateId As Long)
+    Dim strSQL As String
+    cboCity.Clear
+    
+    If stateId > 0 Then
+        strSQL = "SELECT CityId, CityName FROM city_master WHERE StateId = " & stateId & " AND IsActive = 1 ORDER BY CityName"
+        FillCombo cboCity, strSQL, "CityId", "CityName"
+    End If
+End Sub
+
+' ========================================
+' TEMPLATE 5: CUSTOMER MASTER FORM CODE
+' ========================================
+Option Explicit
+
+Private Sub Form_Load()
+    LoadStates
+    LoadReferences
+    LoadCustomers
+    ClearForm
+End Sub
+
+Private Sub LoadStates()
+    Dim strSQL As String
+    strSQL = "SELECT StateId, StateName FROM state_master WHERE IsActive = 1 ORDER BY StateName"
+    FillCombo cboState, strSQL, "StateId", "StateName"
+End Sub
+
+Private Sub LoadReferences()
+    Dim strSQL As String
+    strSQL = "SELECT ReferenceId, ReferenceName FROM reference_master WHERE IsActive = 1 ORDER BY ReferenceName"
+    FillCombo cboReference, strSQL, "ReferenceId", "ReferenceName"
+End Sub
+
+Private Sub LoadCustomers()
+    Dim strSQL As String
+    Dim rsTemp As ADODB.Recordset
+    
+    lstCustomers.Clear
+    strSQL = "SELECT c.CustomerId, c.CustomerName, c.MobileNo, c.EmailId, c.IsActive, " & _
+             "ct.CityName, s.StateName, r.ReferenceName " & _
+             "FROM customer_master c " & _
+             "LEFT JOIN city_master ct ON c.CityId = ct.CityId " & _
+             "LEFT JOIN state_master s ON c.StateId = s.StateId " & _
+             "LEFT JOIN reference_master r ON c.ReferenceId = r.ReferenceId " & _
+             "ORDER BY c.CustomerName"
+    Set rsTemp = ExecuteQuery(strSQL)
+    
+    If Not rsTemp Is Nothing Then
+        Do While Not rsTemp.EOF
+            lstCustomers.AddItem rsTemp("CustomerId") & " - " & rsTemp("CustomerName") & " - " & _
+                                IIf(IsNull(rsTemp("MobileNo")), "", rsTemp("MobileNo"))
+            rsTemp.MoveNext
+        Loop
+        rsTemp.Close
+        Set rsTemp = Nothing
+    End If
+End Sub
+
+Private Sub ClearForm()
+    txtCustomerId.Text = ""
+    txtCustomerName.Text = ""
+    txtAddress.Text = ""
+    txtMobileNo.Text = ""
+    txtEmailId.Text = ""
+    cboState.ListIndex = -1
+    cboCity.Clear
+    cboReference.ListIndex = -1
+    chkIsActive.Value = 1
+    txtCustomerName.SetFocus
+End Sub
+
+Private Sub cmdSave_Click()
+    If Trim(txtCustomerName.Text) = "" Then
+        MsgBox "Please enter customer name.", vbExclamation, "Validation Error"
+        txtCustomerName.SetFocus
+        Exit Sub
+    End If
+    
+    Dim strSQL As String
+    Dim cityId As String
+    Dim stateId As String
+    Dim referenceId As String
+    
+    cityId = "NULL"
+    stateId = "NULL"
+    referenceId = "NULL"
+    
+    If cboCity.ListIndex >= 0 Then
+        cityId = cboCity.ItemData(cboCity.ListIndex)
+    End If
+    
+    If cboState.ListIndex >= 0 Then
+        stateId = cboState.ItemData(cboState.ListIndex)
+    End If
+    
+    If cboReference.ListIndex >= 0 Then
+        referenceId = cboReference.ItemData(cboReference.ListIndex)
+    End If
+    
+    If txtCustomerId.Text = "" Then
+        strSQL = "INSERT INTO customer_master (CustomerName, Address, MobileNo, EmailId, CityId, StateId, ReferenceId, IsActive) VALUES ('" & _
+                CleanString(txtCustomerName.Text) & "', '" & _
+                CleanString(txtAddress.Text) & "', '" & _
+                CleanString(txtMobileNo.Text) & "', '" & _
+                CleanString(txtEmailId.Text) & "', " & _
+                cityId & ", " & stateId & ", " & referenceId & ", " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & ")"
+    Else
+        strSQL = "UPDATE customer_master SET CustomerName = '" & _
+                CleanString(txtCustomerName.Text) & "', Address = '" & _
+                CleanString(txtAddress.Text) & "', MobileNo = '" & _
+                CleanString(txtMobileNo.Text) & "', EmailId = '" & _
+                CleanString(txtEmailId.Text) & "', CityId = " & _
+                cityId & ", StateId = " & stateId & ", ReferenceId = " & _
+                referenceId & ", IsActive = " & _
+                IIf(chkIsActive.Value = 1, "1", "0") & _
+                " WHERE CustomerId = " & txtCustomerId.Text
+    End If
+    
+    If ExecuteCommand(strSQL) Then
+        MsgBox "Customer saved successfully.", vbInformation, "Success"
+        LoadCustomers
+        ClearForm
+    End If
+End Sub
+
+Private Sub cmdExit_Click()
+    Unload Me
+End Sub
+
+Private Sub cboState_Click()
+    If cboState.ListIndex >= 0 Then
+        LoadCities cboState.ItemData(cboState.ListIndex)
+    Else
+        cboCity.Clear
+    End If
+End Sub
+
+Private Sub LoadCities(stateId As Long)
+    Dim strSQL As String
+    cboCity.Clear
+    
+    If stateId > 0 Then
+        strSQL = "SELECT CityId, CityName FROM city_master WHERE StateId = " & stateId & " AND IsActive = 1 ORDER BY CityName"
+        FillCombo cboCity, strSQL, "CityId", "CityName"
+    End If
+End Sub
