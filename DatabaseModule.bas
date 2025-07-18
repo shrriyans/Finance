@@ -7,7 +7,7 @@ Public rs As ADODB.Recordset
 
 ' Database connection parameters
 Public Const DB_SERVER = "localhost"
-Public Const DB_NAME = "employee_db"
+Public Const DB_NAME = "CustomerManagement"
 Public Const DB_USER = "root"
 Public Const DB_PASSWORD = ""
 
@@ -50,68 +50,75 @@ Public Sub DisconnectFromDatabase()
     End If
 End Sub
 
-Public Function ExecuteQuery(sql As String) As ADODB.Recordset
+Public Function ValidateUser(username As String, password As String) As Boolean
     On Error GoTo ErrorHandler
+    
+    Dim sql As String
+    sql = "SELECT COUNT(*) FROM Users WHERE UserName = '" & username & "' AND Password = '" & password & "' AND IsActive = 1"
+    
+    Set rs = conn.Execute(sql)
+    
+    If rs.Fields(0).Value > 0 Then
+        ValidateUser = True
+    Else
+        ValidateUser = False
+    End If
+    
+    rs.Close
+    Exit Function
+    
+ErrorHandler:
+    ValidateUser = False
+    MsgBox "Login validation failed: " & Err.Description, vbCritical, "Database Error"
+End Function
+
+Public Function GetCities() As ADODB.Recordset
+    On Error GoTo ErrorHandler
+    
+    Dim sql As String
+    sql = "SELECT CityId, CityName, ShortCode, StateId FROM CityMaster WHERE IsActive = 1 ORDER BY CityName"
     
     Set rs = New ADODB.Recordset
-    rs.Open sql, conn, adOpenStatic, adLockOptimistic
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly
     
-    Set ExecuteQuery = rs
+    Set GetCities = rs
     Exit Function
     
 ErrorHandler:
-    MsgBox "Query execution failed: " & Err.Description, vbCritical, "Query Error"
-    Set ExecuteQuery = Nothing
+    MsgBox "Failed to retrieve cities: " & Err.Description, vbCritical, "Database Error"
+    Set GetCities = Nothing
 End Function
 
-Public Function ExecuteNonQuery(sql As String) As Boolean
+Public Function GetReferences() As ADODB.Recordset
     On Error GoTo ErrorHandler
     
-    conn.Execute sql
-    ExecuteNonQuery = True
+    Dim sql As String
+    sql = "SELECT ReferenceId, Name FROM ReferenceMaster WHERE IsActive = 1 ORDER BY Name"
+    
+    Set rs = New ADODB.Recordset
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly
+    
+    Set GetReferences = rs
     Exit Function
     
 ErrorHandler:
-    ExecuteNonQuery = False
-    MsgBox "Command execution failed: " & Err.Description, vbCritical, "Execution Error"
+    MsgBox "Failed to retrieve references: " & Err.Description, vbCritical, "Database Error"
+    Set GetReferences = Nothing
 End Function
 
-Public Function GetEmployees() As ADODB.Recordset
-    Dim sql As String
-    sql = "SELECT employee_id, first_name, last_name, email, department, salary FROM employees ORDER BY employee_id"
-    Set GetEmployees = ExecuteQuery(sql)
-End Function
-
-Public Function AddEmployee(firstName As String, lastName As String, email As String, department As String, salary As Double) As Boolean
-    Dim sql As String
-    sql = "INSERT INTO employees (first_name, last_name, email, department, salary) VALUES ('" & _
-          firstName & "', '" & lastName & "', '" & email & "', '" & department & "', " & salary & ")"
+Public Function GetStates() As ADODB.Recordset
+    On Error GoTo ErrorHandler
     
-    AddEmployee = ExecuteNonQuery(sql)
-End Function
-
-Public Function UpdateEmployee(employeeId As Long, firstName As String, lastName As String, email As String, department As String, salary As Double) As Boolean
     Dim sql As String
-    sql = "UPDATE employees SET first_name='" & firstName & "', last_name='" & lastName & _
-          "', email='" & email & "', department='" & department & "', salary=" & salary & _
-          " WHERE employee_id=" & employeeId
+    sql = "SELECT StateId, StateName, StateCode FROM StateMaster WHERE IsActive = 1 ORDER BY StateName"
     
-    UpdateEmployee = ExecuteNonQuery(sql)
-End Function
-
-Public Function DeleteEmployee(employeeId As Long) As Boolean
-    Dim sql As String
-    sql = "DELETE FROM employees WHERE employee_id=" & employeeId
+    Set rs = New ADODB.Recordset
+    rs.Open sql, conn, adOpenStatic, adLockReadOnly
     
-    DeleteEmployee = ExecuteNonQuery(sql)
-End Function
-
-Public Function SearchEmployees(searchTerm As String) As ADODB.Recordset
-    Dim sql As String
-    sql = "SELECT employee_id, first_name, last_name, email, department, salary FROM employees " & _
-          "WHERE first_name LIKE '%" & searchTerm & "%' OR last_name LIKE '%" & searchTerm & "%' " & _
-          "OR email LIKE '%" & searchTerm & "%' OR department LIKE '%" & searchTerm & "%' " & _
-          "ORDER BY employee_id"
+    Set GetStates = rs
+    Exit Function
     
-    Set SearchEmployees = ExecuteQuery(sql)
+ErrorHandler:
+    MsgBox "Failed to retrieve states: " & Err.Description, vbCritical, "Database Error"
+    Set GetStates = Nothing
 End Function

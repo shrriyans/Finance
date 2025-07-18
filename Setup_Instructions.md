@@ -1,17 +1,17 @@
-# Visual Basic 6.0 Employee Management System with MySQL
+# Visual Basic 6.0 Customer Management System with MySQL
 
 ## Overview
-This is a complete Employee Management System built in Visual Basic 6.0 with MySQL database connectivity. The system provides full CRUD (Create, Read, Update, Delete) operations for employee records.
+This is a complete Customer Management System built in Visual Basic 6.0 with MySQL database connectivity. The system provides comprehensive management of customers, cities, references, and states with full CRUD (Create, Read, Update, Delete) operations.
 
 ## Features
-- Add new employees
-- Update existing employee information
-- Delete employees
-- Search employees by name, email, or department
-- View all employees in a data grid
-- Data validation
-- Error handling
-- Modern GUI interface
+- **User Authentication**: Secure login system with multiple user accounts
+- **Customer Master**: Complete customer information management with address, contact details, and references
+- **City Master**: Manage cities with state associations and activation status
+- **Reference Master**: Manage reference contacts with hierarchical referral system
+- **State Master**: Pre-configured states with codes for address management
+- **Data Validation**: Comprehensive field validation and error handling
+- **Search Functionality**: Search customers and references by name, email, or mobile number
+- **Modern GUI Interface**: User-friendly forms with data grids and combo boxes
 
 ## System Requirements
 
@@ -49,115 +49,131 @@ This is a complete Employee Management System built in Visual Basic 6.0 with MyS
 2. Go to Administrative Tools → Data Sources (ODBC)
 3. Click on "System DSN" tab
 4. Click "Add" button
-5. Select "MySQL ODBC Driver" and click "Finish"
-6. Configure the data source:
+5. Select "MySQL ODBC 8.0 ANSI Driver" (or available version)
+6. Click "Finish"
+7. Configure the connection:
    - **Data Source Name**: MySQL_DSN
-   - **Server**: localhost
+   - **TCP/IP Server**: localhost
+   - **Port**: 3306
    - **User**: root
    - **Password**: [your MySQL root password]
-   - **Database**: employee_db
-7. Click "Test" to verify connection
-8. Click "OK" to save
+   - **Database**: CustomerManagement
+8. Click "Test" to verify connection
+9. Click "OK" to save
 
-### 5. Open Visual Basic 6.0 Project
+### 5. Open VB6 Project
 1. Open Visual Basic 6.0
-2. Open the project file: `EmployeeManagement.vbp`
-3. If prompted about missing references, add them:
-   - Microsoft ActiveX Data Objects 2.0 Library
-   - Microsoft ADO Data Control 6.0 (OLEDB)
-   - Microsoft DataGrid Control 6.0 (OLEDB)
+2. Open the project file `CustomerManagement.vbp`
+3. The project will load with all forms and modules
 
-### 6. Compile and Run
-1. Press F5 to run the application in debug mode
-2. Or go to File → Make EmployeeManagement.exe to create executable
-
-## Project Structure
-
-```
-EmployeeManagement/
-├── EmployeeManagement.vbp      # VB6 Project file
-├── MainForm.frm                # Main application form
-├── SearchForm.frm              # Employee search form
-├── DatabaseModule.bas          # Database connection module
-├── database_schema.sql         # MySQL database schema
-└── Setup_Instructions.md       # This file
-```
+### 6. Run the Application
+1. Press F5 or click the Run button in VB6
+2. The login form will appear
+3. Use default credentials: **admin** / **admin123**
+4. Click Login to access the main menu
 
 ## Database Schema
 
-### employees Table
-- `employee_id` (INT, AUTO_INCREMENT, PRIMARY KEY)
-- `first_name` (VARCHAR(50), NOT NULL)
-- `last_name` (VARCHAR(50), NOT NULL)
-- `email` (VARCHAR(100), UNIQUE, NOT NULL)
-- `department` (VARCHAR(50), NOT NULL)
-- `salary` (DECIMAL(10,2), NOT NULL)
-- `created_at` (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP)
-- `updated_at` (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)
+### Tables
+- **StateMaster**: States with codes and activation status
+- **CityMaster**: Cities linked to states
+- **ReferenceMaster**: Reference contacts with hierarchical structure
+- **CustomerMaster**: Main customer information with references
+- **Users**: System users for authentication
+
+### Key Features
+- **Foreign Key Relationships**: Maintains data integrity
+- **Audit Fields**: Created and updated timestamps
+- **Soft Delete**: IsActive flag for safe record deactivation
+- **Hierarchical References**: References can refer other references
 
 ## Usage Instructions
 
-### Adding Employees
-1. Fill in all required fields (First Name, Last Name, Email, Department, Salary)
-2. Click "Add" button
-3. The new employee will be added to the database and displayed in the grid
+### Login
+- Start the application
+- Enter username and password
+- Default users: admin/admin123, user1/user123, manager/manager123
 
-### Updating Employees
-1. Select an employee from the data grid
-2. Modify the information in the text fields
-3. Click "Update" button
-4. The changes will be saved to the database
+### Main Menu
+- **Customer Master**: Manage customer information
+- **City Master**: Manage cities and states
+- **Reference Master**: Manage reference contacts
+- **Exit**: Close the application
 
-### Deleting Employees
-1. Select an employee from the data grid
-2. Click "Delete" button
-3. Confirm the deletion in the dialog box
-4. The employee will be removed from the database
+### Customer Master
+- Add new customers with complete information
+- Update existing customer details
+- Delete customers (soft delete - sets IsActive to false)
+- Search customers by name, email, or mobile number
+- Select city and state from dropdown lists
+- Assign references from existing reference list
 
-### Searching Employees
-1. Click "Search" button to open the search form
-2. Enter search terms (searches name, email, and department)
-3. Click "Search" or press Enter
-4. Double-click on a result to select and return to main form
+### City Master
+- Add new cities with state association
+- Update city information and activation status
+- Delete cities (permanent deletion)
+- Manage short codes for cities
 
-### Other Functions
-- **Clear**: Clears all input fields
-- **Refresh**: Reloads data from database
+### Reference Master
+- Add new references with complete contact information
+- Create hierarchical reference structure (references can refer other references)
+- Update reference details and activation status
+- Search references by name, email, or mobile number
+- Soft delete references
 
 ## Troubleshooting
 
-### Connection Issues
-- Verify MySQL server is running
-- Check ODBC Data Source configuration
-- Ensure MySQL ODBC driver is properly installed
-- Verify database name and credentials
+### Common Issues
 
-### Missing References
-- In VB6, go to Project → References
-- Check required references:
-  - Microsoft ActiveX Data Objects 2.0 Library
-  - Microsoft ADO Data Control 6.0 (OLEDB)
-  - Microsoft DataGrid Control 6.0 (OLEDB)
+1. **Database Connection Error**
+   - Verify MySQL server is running
+   - Check ODBC DSN configuration
+   - Ensure correct username/password
+   - Verify database exists
 
-### Runtime Errors
-- Ensure all required DLLs are present on target machine
-- Install Visual Basic 6.0 Runtime files
-- Register required ActiveX controls
+2. **Login Failed**
+   - Check if Users table has data
+   - Verify username/password combination
+   - Ensure user IsActive = 1
 
-## Security Notes
-- This example uses basic authentication
-- In production, implement proper password hashing
-- Use parameterized queries to prevent SQL injection
-- Implement user access controls
+3. **Form Loading Issues**
+   - Check if all required tables exist
+   - Verify foreign key relationships
+   - Ensure sample data is loaded
 
-## Customization
-- Modify `DatabaseModule.bas` to change connection parameters
-- Add new fields by updating both the database schema and forms
-- Extend search functionality in `SearchForm.frm`
-- Add data validation rules in the ValidateFields function
+4. **ODBC Driver Issues**
+   - Install correct version (32-bit for VB6)
+   - Use ANSI driver version
+   - Configure system DSN (not user DSN)
 
-## Support
-For issues or questions, refer to:
-- Visual Basic 6.0 documentation
-- MySQL documentation
-- ODBC driver documentation
+### Database Maintenance
+- Regular backup of CustomerManagement database
+- Monitor database size and performance
+- Clean up old records if needed
+- Update user passwords periodically
+
+## Technical Details
+
+### Project Structure
+- **LoginForm.frm**: User authentication
+- **MainForm.frm**: Main menu navigation
+- **CustomerMasterForm.frm**: Customer management
+- **CityMasterForm.frm**: City management
+- **ReferenceMasterForm.frm**: Reference management
+- **DatabaseModule.bas**: Database connectivity and common functions
+- **CustomerManagement.vbp**: Main project file
+
+### Database Connection
+- Uses ADO (ActiveX Data Objects) for database connectivity
+- ODBC connection through MySQL ODBC driver
+- Connection string configured in DatabaseModule.bas
+- Automatic connection management with error handling
+
+### Data Validation
+- Field length validation based on database constraints
+- Required field validation
+- Numeric validation where applicable
+- Email format validation (basic)
+- Mobile number length validation
+
+This system provides a complete foundation for customer relationship management with scalable architecture and professional user interface.
